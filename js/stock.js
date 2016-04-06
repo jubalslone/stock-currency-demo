@@ -4,22 +4,26 @@ window.stock.service('stockService',
 	['$http', 'stockSettings','$q',
 	function ($http, stockSettings, $q) {
 
-		this.getStockData = function(stocks) {
+		this.getStockData = function(stocks,isSecure) {
 			if ( !stocks ) {
 				 return $q.reject();
 			}
 
-			stocks = stocks.replace(/ /g,''); //remove any spaces
+			// Google Finance doesn't accept https requests, so return cached information instead of failing
+			if (isSecure) {
+				return transformStockData('// [ { "id": "304466804484872" ,"t" : "GOOG" ,"e" : "NASDAQ" ,"l" : "745.69" ,"l_fix" : "745.69" ,"l_cur" : "745.69" ,"s": "2" ,"ltt":"4:00PM EDT" ,"lt" : "Apr 6, 4:00PM EDT" ,"lt_dts" : "2016-04-06T16:00:01Z" ,"c" : "+7.89" ,"c_fix" : "7.89" ,"cp" : "1.07" ,"cp_fix" : "1.07" ,"ccol" : "chg" ,"pcls_fix" : "737.8" ,"el": "745.68" ,"el_fix": "745.68" ,"el_cur": "745.68" ,"elt" : "Apr 6, 4:37PM EDT" ,"ec" : "-0.01" ,"ec_fix" : "-0.01" ,"ecp" : "0.00" ,"ecp_fix" : "0.00" ,"eccol" : "chr" ,"div" : "" ,"yld" : "" } ,{ "id": "658890" ,"t" : "YHOO" ,"e" : "NASDAQ" ,"l" : "36.66" ,"l_fix" : "36.66" ,"l_cur" : "36.66" ,"s": "2" ,"ltt":"4:00PM EDT" ,"lt" : "Apr 6, 4:00PM EDT" ,"lt_dts" : "2016-04-06T16:00:01Z" ,"c" : "+0.25" ,"c_fix" : "0.25" ,"cp" : "0.69" ,"cp_fix" : "0.69" ,"ccol" : "chg" ,"pcls_fix" : "36.41" ,"el": "36.61" ,"el_fix": "36.61" ,"el_cur": "36.61" ,"elt" : "Apr 6, 4:39PM EDT" ,"ec" : "-0.05" ,"ec_fix" : "-0.05" ,"ecp" : "-0.14" ,"ecp_fix" : "-0.14" ,"eccol" : "chr" ,"div" : "" ,"yld" : "" } ]');
+			} else {
+				stocks = stocks.replace(/ /g,''); //remove any spaces
+				var finalUrl = stockSettings.stockPath;
+				return $http.get(finalUrl).success(function() {
+					data = transformStockData(data);
+				})
+				.error(function() {
+					console.info("Server returned bad response: ", data);
+					data = { error: true };
+				});
+			}
 
-			var finalUrl = stockSettings.stockPath;
-
-			// return $http.get(finalUrl).success(function() {
-			// 	data = transformStockData(data);
-			// })
-			// .error(function() {
-			// 	data = "error";
-			// });;
-			return transformStockData('// [ { "id": "304466804484872" ,"t" : "GOOG" ,"e" : "NASDAQ" ,"l" : "745.69" ,"l_fix" : "745.69" ,"l_cur" : "745.69" ,"s": "2" ,"ltt":"4:00PM EDT" ,"lt" : "Apr 6, 4:00PM EDT" ,"lt_dts" : "2016-04-06T16:00:01Z" ,"c" : "+7.89" ,"c_fix" : "7.89" ,"cp" : "1.07" ,"cp_fix" : "1.07" ,"ccol" : "chg" ,"pcls_fix" : "737.8" ,"el": "745.68" ,"el_fix": "745.68" ,"el_cur": "745.68" ,"elt" : "Apr 6, 4:37PM EDT" ,"ec" : "-0.01" ,"ec_fix" : "-0.01" ,"ecp" : "0.00" ,"ecp_fix" : "0.00" ,"eccol" : "chr" ,"div" : "" ,"yld" : "" } ,{ "id": "658890" ,"t" : "YHOO" ,"e" : "NASDAQ" ,"l" : "36.66" ,"l_fix" : "36.66" ,"l_cur" : "36.66" ,"s": "2" ,"ltt":"4:00PM EDT" ,"lt" : "Apr 6, 4:00PM EDT" ,"lt_dts" : "2016-04-06T16:00:01Z" ,"c" : "+0.25" ,"c_fix" : "0.25" ,"cp" : "0.69" ,"cp_fix" : "0.69" ,"ccol" : "chg" ,"pcls_fix" : "36.41" ,"el": "36.61" ,"el_fix": "36.61" ,"el_cur": "36.61" ,"elt" : "Apr 6, 4:39PM EDT" ,"ec" : "-0.05" ,"ec_fix" : "-0.05" ,"ecp" : "-0.14" ,"ecp_fix" : "-0.14" ,"eccol" : "chr" ,"div" : "" ,"yld" : "" } ]');
 			/*
 			Expected response literal:
 
@@ -49,7 +53,7 @@ window.stock.service('stockService',
 
 				$scope.addCard = function() {
 					if($scope.newCard) {
-						var newCall = stockService.getStockData($scope.newCard);
+						var newCall = stockService.getStockData($scope.newCard,$scope.isSecure);
 						for (var symbol in newCall) {
 							$scope.stockData.cards.unshift(newCall[symbol]);
 						}
@@ -64,7 +68,7 @@ window.stock.service('stockService',
 				};
 
 				// Fisher–Yates shuffle algorithm
-				var shuffleArray = function(array) {
+				$scope.shuffleArray = function(array) {
 					var m = array.length, t, i;
 
 					// While there remain elements to shuffle
@@ -82,7 +86,10 @@ window.stock.service('stockService',
 				};
 
 				// onload
-				shuffleArray($scope.stockData.cards);
+				if (window.location.protocol != "http:") {
+					// I see no reason to do something like this in production; this is only for purposes of the demonstration and the local and free hosts that can cause issues
+					$scope.isSecure = true;
+				}
 			}
 		]
 	);
@@ -109,7 +116,6 @@ angular.module('stock').directive('ngEnter', function() {
 				scope.$apply(function(){
 					scope.$eval(attrs.ngEnter, {'event': event});
 				});
-
 				event.preventDefault();
 			}
 		});

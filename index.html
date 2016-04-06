@@ -27,10 +27,12 @@
 			</div>
 			<div class="col-xs-4 col-xs-offset-4 text-center">
 				<div id="add">
+					<em ng-show="isSecure">You are using a secure website or a localhost, stock data will be cached from 4/6/16 and limited to GOOG and YHOO.</em><br /><br />
 					<div class="input-group">
 						<input id="new-card-input" type="text" class="form-control" placeholder="ex: GOOG,YHOO" ng-model="newCard" ng-enter="addCard(newCard)" />
 						<span class="input-group-btn">
-							<button type="button" class="btn btn-primary" ng-click="addCard(newCard)">Add</button>
+							<button type="button" class="btn btn-primary" ng-click="addCard(newCard)" title="Create a stock card">Add</button>
+							<button type="button" class="btn btn-default" title="Shuffle the displayed cards" ng-click="shuffleArray(stockData.cards)"><span class="glyphicon glyphicon-random"></span></button>
 						</span>
 					</div>
 				</div>
