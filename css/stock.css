@@ -1,0 +1,42 @@
+[ng-cloak] {
+	display: none !important;	
+}
+
+#header {
+	text-align: center;
+	background-image: url('../images/money-pile-header.jpg');
+	background-repeat: no-repeat;
+	background-color: lightblue;
+	height: 70px;
+	background-size: cover;
+	color: white;
+	text-shadow: 2px 2px black;
+	margin-top: 10px;
+}
+
+h1 {
+	line-height: 2;
+}
+
+.single-card {
+	width: 31%;
+	background: lightblue;
+    overflow: auto;
+    overflow-x: hidden;
+    height: 150px;
+    max-height: 150px;
+    margin: 10px;
+	border-radius: 10px;
+}
+
+	.single-card strong {
+		font-size: 20px;
+	}
+
+#add {
+	margin: 20px 0;
+}
+
+.icons .glyphicon { 
+	cursor: pointer;
+}
