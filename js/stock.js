@@ -86,6 +86,11 @@ window.stock.service('stockService',
 					return array;
 				};
 
+				$scope.setPrice = function(from,to,amount) {
+					var rates = $scope.currencyData.rates;
+					return ((amount/rates[from]) * rates[to]);
+				};
+
 				// onload
 				if (window.location.protocol != "http:") {
 					// I see no reason to do something like this in production; this is only for purposes of the demonstration and the local and free hosts that can cause issues
