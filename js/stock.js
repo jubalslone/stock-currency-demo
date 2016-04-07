@@ -23,13 +23,6 @@ window.stock.service('stockService',
 					data = { error: true };
 				});
 			}
-
-			/*
-			Expected response literal:
-
-			{"Status":"SUCCESS","Name":"Alphabet Inc","Symbol":"GOOGL","LastPrice":767.93,"Change":9.3599999999999,"ChangePercent":1.23390062881473,"Timestamp":"Wed Apr 6 15:59:00 UTC-04:00 2016","MSDate":42466.6659722222,"MarketCap":263231045400,"Volume":75130,"ChangeYTD":778.01,"ChangePercentYTD":-1.29561316692588,"High":768.24,"Low":757.73,"Open":757.73}
-
-			*/
 		};
 
 		var transformStockData = function(data) {
@@ -57,6 +50,7 @@ window.stock.service('stockService',
 					if($scope.newCard) {
 						var newCall = stockService.getStockData($scope.newCard,$scope.isSecure);
 						newCall.formattedTime = new Date(newCall.Timestamp);
+						newCall.currentCurrency = "USD";
 						$scope.stockData.cards.unshift(newCall);
 						$scope.newCard = "";
 					}
@@ -88,10 +82,12 @@ window.stock.service('stockService',
 
 				$scope.setPrice = function(from,to,amount) {
 					var rates = $scope.currencyData.rates;
-					return ((amount/rates[from]) * rates[to]);
+					var converted_amount = ((amount/rates[from]) * rates[to]).toFixed( 2 )
+					return converted_amount;
 				};
 
 				// onload
+				$scope.isSecure = false;
 				if (window.location.protocol != "http:") {
 					// I see no reason to do something like this in production; this is only for purposes of the demonstration and the local and free hosts that can cause issues
 					$scope.isSecure = true;
@@ -99,6 +95,7 @@ window.stock.service('stockService',
 
 				stockService.getCurrencyData().success(function(data) {
 					$scope.currencyData = data;
+					$scope.currencyData.rates.USD = 1;
 				});
 			}
 		]
