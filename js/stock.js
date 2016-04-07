@@ -15,10 +15,10 @@ window.stock.service('stockService',
 			} else {
 				stocks = stocks.replace(/ /g,''); //remove any spaces
 				var finalUrl = stockSettings.stockPath;
-				return $http.get(finalUrl).success(function() {
+				return $http.get(finalUrl).success(function(data) {
 					data = transformStockData(data);
 				})
-				.error(function() {
+				.error(function(data) {
 					console.info("Server returned bad response: ", data);
 					data = { error: true };
 				});
@@ -38,7 +38,9 @@ window.stock.service('stockService',
 
 		this.getCurrencyData = function() {
 			var finalUrl = stockSettings.currencyPath;
-			return $http.get(finalUrl);
+			return $http.get(finalUrl).success(function(data) {
+				data = data;
+			});
 		};
 	}
 ]);
@@ -89,6 +91,10 @@ window.stock.service('stockService',
 					// I see no reason to do something like this in production; this is only for purposes of the demonstration and the local and free hosts that can cause issues
 					$scope.isSecure = true;
 				}
+
+				stockService.getCurrencyData().success(function(data) {
+					$scope.currencyData = data;
+				});
 			}
 		]
 	);
