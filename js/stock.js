@@ -4,25 +4,20 @@ window.stock.service('stockService',
 	['$http', 'stockSettings','$q',
 	function ($http, stockSettings, $q) {
 
-		this.getStockData = function(stocks,isSecure) {
-			if ( !stocks ) {
+		this.getStockData = function(stockRequest,isSecure) {
+			if ( !stockRequest ) {
 				 return $q.reject();
 			}
 
-			// dev.markitondemand.com doesn't accept https requests, so return cached information instead of failing
-			if (isSecure) {
-				return transformStockData('{"Status":"SUCCESS","Name":"Alphabet Inc","Symbol":"GOOGL","LastPrice":767.93,"Change":9.3599999999999,"ChangePercent":1.23390062881473,"Timestamp":"Wed Apr 6 15:59:00 UTC-04:00 2016","MSDate":42466.6659722222,"MarketCap":263231045400,"Volume":75130,"ChangeYTD":778.01,"ChangePercentYTD":-1.29561316692588,"High":768.24,"Low":757.73,"Open":757.73}');
-			} else {
-				stocks = stocks.replace(/ /g,''); //remove any spaces
-				var finalUrl = stockSettings.stockPath;
-				return $http.get(finalUrl).success(function(data) {
-					data = transformStockData(data);
-				})
-				.error(function(data) {
-					console.info("Server returned bad response: ", data);
-					data = { error: true };
-				});
-			}
+			stockRequest = stockRequest.replace(/ /g,''); //remove any spaces
+			var finalUrl = stockSettings.stockPath + stockRequest;
+			return $http.jsonp(finalUrl).success(function(data) {
+				data = data;
+			})
+			.error(function(data) {
+				console.info("Server returned bad response: ", data);
+				data = { error: true };
+			});
 		};
 
 		var transformStockData = function(data) {
@@ -48,11 +43,12 @@ window.stock.service('stockService',
 
 				$scope.addCard = function() {
 					if($scope.newCard) {
-						var newCall = stockService.getStockData($scope.newCard,$scope.isSecure);
-						newCall.formattedTime = new Date(newCall.Timestamp);
-						newCall.currentCurrency = "USD";
-						$scope.stockData.cards.unshift(newCall);
-						$scope.newCard = "";
+						stockService.getStockData($scope.newCard,$scope.isSecure).success(function(data) {
+							data.formattedTime = new Date(data.Timestamp);
+							data.currentCurrency = "USD";
+							$scope.stockData.cards.unshift(data);
+							$scope.newCard = "";
+						});
 					}
 				};
 
@@ -87,11 +83,6 @@ window.stock.service('stockService',
 				};
 
 				// onload
-				$scope.isSecure = false;
-				if (window.location.protocol != "http:") {
-					// I see no reason to do something like this in production; this is only for purposes of the demonstration and the local and free hosts that can cause issues
-					$scope.isSecure = true;
-				}
 
 				stockService.getCurrencyData().success(function(data) {
 					$scope.currencyData = data;
@@ -107,7 +98,7 @@ window.stock.service('stockService',
 		'$provide',
 		function ($provide) {
 			var appSettings = {
-				stockPath: 'http://dev.markitondemand.com/MODApis/Api/v2/Quote/json?',
+				stockPath: 'http://dev.markitondemand.com/MODApis/Api/v2/Quote/jsonp?callback=JSON_CALLBACK&symbol=',
 				currencyPath: 'http://api.fixer.io/latest?base=USD'
 			};
 
